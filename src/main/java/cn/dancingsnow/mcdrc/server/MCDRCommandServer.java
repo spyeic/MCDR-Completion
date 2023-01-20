@@ -6,11 +6,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.LiteralText;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -20,20 +20,14 @@ public class MCDRCommandServer implements DedicatedServerModInitializer {
     public static final String MOD_ID = "mcdrc";
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
     public static Logger LOGGER = LogManager.getLogger();
-    public static ModConfig modConfig = new ModConfig("config/%s.json".formatted(MOD_ID));
-    public static NodeData nodeData = null;
+    public static ModConfig modConfig = new ModConfig(
+            // create config dir if not exist
+            FabricLoader.getInstance().getConfigDir().resolve("%s.json".formatted(MOD_ID))
+    );
+    private static NodeData nodeData = null;
 
     @Override
     public void onInitializeServer() {
-        Path config = Path.of("config");
-        if (!Files.exists(config)) {
-            try {
-                Files.createDirectory(config);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new IllegalStateException("MCDR-Completion init server fail");
-            }
-        }
         if (!modConfig.load()) {
             LOGGER.error("MCDR-Completion load config fail.");
             throw new IllegalStateException("MCDR-Completion init server fail");
@@ -50,6 +44,7 @@ public class MCDRCommandServer implements DedicatedServerModInitializer {
                             return 1;
                         })))));
 
+        // TODO: remove this
         NodeChangeWatcher.init();
         loadNodeData();
     }
