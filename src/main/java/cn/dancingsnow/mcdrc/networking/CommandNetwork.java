@@ -15,6 +15,7 @@ public class CommandNetwork {
     public static final Identifier COMMAND_PACKET_ID = new Identifier(MCDRCommandClient.MOD_ID, "command");
 
     public static void sendNodeDataToClient(ServerPlayNetworkHandler handler, NodeData nodeData) {
+        if (nodeData == null) return;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(MCDRCommandServer.GSON.toJson(nodeData));
         ServerPlayNetworking.getSender(handler).sendPacket(COMMAND_PACKET_ID, buf);
