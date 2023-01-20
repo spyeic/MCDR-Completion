@@ -34,8 +34,6 @@ public class MCDRCommandServer implements DedicatedServerModInitializer {
 
         CommandRegistrationCallback.EVENT.register(NodeReloadCommand::register);
 
-        // TODO: remove this
-        NodeChangeWatcher.init();
         loadNodeData();
     }
 
