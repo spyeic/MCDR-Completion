@@ -7,14 +7,11 @@ import com.google.gson.GsonBuilder;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.text.LiteralText;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import static net.minecraft.server.command.CommandManager.literal;
 
 public class MCDRCommandServer implements DedicatedServerModInitializer {
     public static final String MOD_ID = "mcdrc";
@@ -35,14 +32,7 @@ public class MCDRCommandServer implements DedicatedServerModInitializer {
 
         modConfig.save();
 
-        CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated) -> dispatcher.register(
-                literal("mcdrc")
-                        .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
-                        .then(literal("reload").executes(context -> {
-                            context.getSource().sendFeedback(new LiteralText("Reloading nodes..."), true);
-                            loadNodeData();
-                            return 1;
-                        })))));
+        CommandRegistrationCallback.EVENT.register(NodeReloadCommand::register);
 
         // TODO: remove this
         NodeChangeWatcher.init();
@@ -51,8 +41,13 @@ public class MCDRCommandServer implements DedicatedServerModInitializer {
 
     public static void loadNodeData() {
         try {
-            NodeData data = GSON.fromJson(Files.newBufferedReader(Path.of(modConfig.getNodePath())), NodeData.class);
-            if (data != null) nodeData = data;
+            Path nodePath = Path.of(modConfig.getNodePath());
+            if (Files.exists(nodePath)) {
+                NodeData data = GSON.fromJson(Files.newBufferedReader(nodePath), NodeData.class);
+                if (data != null) nodeData = data;
+            } else {
+                LOGGER.error("MCDR-Completion node file not exist.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error(e);
